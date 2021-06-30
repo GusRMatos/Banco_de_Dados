@@ -1,0 +1,58 @@
+--FUNÇÃO SOMAR COM ERRO EM CASO DE DADO NULO
+CREATE OR REPLACE FUNCTION fc_somar(INTEGER,INTEGER)
+RETURNS INTEGER
+SECURITY DEFINER
+RETURNS NULL ON NULL INPUT
+LANGUAGE SQL
+AS $$
+	SELECT $1 + $2;
+$$;
+
+SELECT fc_somar(1,null);
+
+--FUNÇÃO SOMAR COM SUBSTITUIÇÃO DE NULO POR ZERO
+CREATE OR REPLACE FUNCTION fc_somar(INTEGER,INTEGER)
+RETURNS INTEGER
+SECURITY DEFINER
+CALLED ON NULL INPUT
+LANGUAGE SQL
+AS $$
+	SELECT COALESCE($1,0) + COALESCE($2,0);
+$$;
+
+SELECT fc_somar(1,null);
+
+--FUNÇÂO ADICIONAR BANCO
+CREATE OR REPLACE FUNCTION add_banco(ad_num INTEGER, ad_nome VARCHAR, ad_ativo BOOLEAN)
+RETURNS INTEGER
+SECURITY INVOKER
+LANGUAGE PLPGSQL
+CALLED ON NULL INPUT
+AS $$
+DECLARE variavel_id INTEGER;
+BEGIN
+	IF ad_num IS NULL OR ad_nome IS NULL OR ad_ativo IS NULL THEN
+		RETURN 0;
+	END IF;
+	
+	SELECT INTO variavel_id numero
+	FROM banco
+	WHERE numero = ad_num;
+	
+	IF variavel_id IS NULL THEN
+		INSERT INTO banco(nome,numero,ativo)
+		VALUES (ad_nome, ad_num, ad_ativo);
+	ELSE
+		RETURN variavel_id;
+	END IF;
+	
+	SELECT INTO variavel_id numero
+	FROM banco
+	WHERE numero = ad_num;
+	
+	RETURN variavel_id;
+END $$;
+
+SELECT add_banco(2366,'banco paris',TRUE);
+
+SELECT numero, nome, ativo FROM banco WHERE numero = 2366;
